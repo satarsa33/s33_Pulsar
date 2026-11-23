@@ -1,0 +1,75 @@
+S33 - PULSAR · v2 (1.1.0)
+========================
+
+Groovebox batteria + basso ispirata alla Roland AIRA Compact T-8: sei tracce di batteria con i suoni
+808, 909 e 606 (tutti sintetizzati, nessun campione) e una bass line acida.
+Funziona da sola (PWA) e come modulo della S33 - Mother Board.
+
+I SUONI
+  - BD (cassa), SD (rullante), CP (battimani), TOM, CH (charleston chiuso), OH (charleston aperto).
+    Ogni traccia ha il suo MODEL: 808, 909 o 606. Manopole TUNE, DECAY, una terza manopola che cambia
+    con lo strumento (ATTACK, SNAPPY, TONE, NOISE) e LEVEL.
+  - BASS: una voce 303 dedicata (dalla 1.1.0). Filtro a diodi a 4 poli accoppiati, come sul 303:
+    pendenza morbida (circa 18 dB/ottava), risonanza che "squittisce" senza fischiare, bassi che si
+    assottigliano quando la risonanza sale. Accento con il "sweep" che cresce sugli accenti di fila,
+    slide a tempo fisso, onda quadra ricavata dalla dente di sega come sull'originale.
+    SAW o SQR, CUTOFF, RESO, ENV MOD, DECAY (con l'accento il decay è corto e fisso), ACCENT,
+    TUNE ±12 semitoni, LEVEL.
+  - Manopole: trascina su/giù, rotella o frecce. Maiusc = regolazione fine. Doppio clic = valore iniziale.
+  - Il charleston chiuso zittisce quello aperto, come sulle macchine vere.
+
+EFFETTI
+  OVERDRIVE (su DRUMS, BASS o ALL), DELAY a tempo (1/8, 3/16, 1/4), REVERB, SIDECHAIN (la cassa
+  "abbassa" il basso).
+
+IL SEQUENCER
+  - Clic su uno step: ON → ACCENT → RATCHET ×2 (due colpi nello step) → OFF.
+  - EDIT PROB: clic su uno step acceso per la probabilità: 100 → 75 → 50 → 25%.
+  - BASS NOTES: ▲▼ intonazione, A accento, S slide verso lo step successivo.
+  - LENGTH 8, 16 o 32 step (con 32 ci sono le pagine 1–16 e 17–32).
+  - ◀ SHIFT / SHIFT ▶ ruotano la traccia selezionata. RANDOM: traccia selezionata. RANDOM ALL: tutto
+    il pattern, con un generatore "musicale" (cassa sui quarti, rullante su 2 e 4...). CLEAR.
+  - M accanto a ogni traccia: mute.
+
+PATTERN E BANCO
+  - 32 pattern; i primi 12 sono preset (ACID, ELECTRO, MINIMAL, TRAP, DETROIT, CHICAGO, ITALO, MIAMI,
+    2-STEP, BREAKS, EBM, DUBTECH). Mentre suona, il cambio di pattern aspetta la fine di quello in corso.
+  - Ogni pattern ricorda tempo, swing, tutte le manopole, i modelli 808/909/606 e gli effetti.
+  - NAME rinomina il pattern. SAVE salva tutto il banco nel browser (il pallino diventa oro quando
+    ci sono modifiche non salvate). COPY / PASTE, INIT (svuota), FACTORY (rimette i preset negli slot
+    vuoti), EXPORT / IMPORT del banco come file .json.
+
+PERFORM (pad da tenere premuti; LATCH li trasforma in interruttori)
+  - ROLL: raffica sulla traccia selezionata (1/16, 1/16T, 1/32) che cresce di volume; mentre suona
+    si sente solo lei, e al rilascio il ritmo riparte dall'inizio della misura.
+  - BREAK: silenzio, il tempo continua sotto. TAPE STOP: rallenta fino a fermarsi (SHORT, LONG).
+  - REPEAT: ripete il tempo in corso (1/16, 1/8, 1/4) finché tieni premuto.
+
+MIDI
+  - MIDI: collega le tastiere e i controller. Batteria su qualsiasi canale con le note General MIDI
+    (36 BD, 38 SD, 39 CP, 45 TOM, 42 CH, 46 OH), basso sul canale 2 (velocity > 100 = accento,
+    note legate = slide). Pad PERFORM: note 48 ROLL, 49 BREAK, 50 TAPE STOP, 51 REPEAT (l'Akai LPD8).
+  - SYNC: INT (tempo suo) oppure MIDI (segue il MIDI clock in arrivo, per esempio da Logic: parte e si
+    ferma con Logic, il tempo lo decide Logic).
+  - CLOCK OUT: manda il MIDI clock (con start e stop) alla porta scelta.
+  - Barra spaziatrice: Play / Stop.
+
+NELLA MOTHER BOARD (dalla 0.22)
+  Si aggiunge dalla lista dei moduli (PULSAR). I cavi si fanno da soli: Clock → CLK, uscita → Output.
+  Tre uscite: OUT (tutto, con gli effetti), DRUM e BASS (separate, prima di delay e riverbero: per
+  mandarle nel Looper su cassette diverse o nella Stompbox). Usa OUT oppure DRUM/BASS, non insieme,
+  altrimenti il suono raddoppia.
+  Con il Clock collegato segue Play e tempo della board (il tempo dei pattern non conta).
+  Il banco si salva da solo e finisce nel file della sessione.
+
+INSTALLARE
+  Come le altre app S33: su GitHub Pages, oppure da Terminale nella cartella
+    python3 -m http.server 8035   e poi http://localhost:8035 in Chrome → Installa.
+  Per una versione nuova cambia VERSIONE in sw.js.
+
+NOVITÀ DELLA 1.1.0
+  - Nuova voce 303 per il basso con vero filtro a diodi (prima era la voce di S33 - Acid).
+  - CUTOFF ha una corsa più ampia: a tutto aperto il filtro è davvero aperto.
+
+RICOSTRUIRE (sorgenti nella cartella src)
+  python3 src/build.py "v2 (1.1.0)" 1.1.0      (dalla cartella "s33_Pulsar")

@@ -1,0 +1,19 @@
+{
+  "name": "S33 - Pulsar",
+  "short_name": "Pulsar",
+  "description": "Drum and bass groovebox: six drum tracks with 808, 909 and 606 sounds, a 303-style bass line, 32 patterns, per-step probability and perform effects.",
+  "lang": "en",
+  "id": "s33-pulsar",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#0b0c0e",
+  "theme_color": "#15171b",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
