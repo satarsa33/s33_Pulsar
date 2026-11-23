@@ -1,4 +1,4 @@
-S33 - PULSAR · v2 (1.1.0)
+S33 - PULSAR · v3 (1.1.1)
 ========================
 
 Groovebox batteria + basso ispirata alla Roland AIRA Compact T-8: sei tracce di batteria con i suoni
@@ -67,9 +67,14 @@ INSTALLARE
     python3 -m http.server 8035   e poi http://localhost:8035 in Chrome → Installa.
   Per una versione nuova cambia VERSIONE in sw.js.
 
+NOVITÀ DELLA 1.1.1
+  - L'interfaccia si adatta alla finestra: su uno schermo largo si allarga invece di lasciare spazio
+    ai lati. Suono, effetti e PERFORM stanno su una riga; pattern e banco in un solo pannello.
+  - La mappa MIDI è nel suggerimento del pulsante MIDI (passa sopra con il mouse).
+
 NOVITÀ DELLA 1.1.0
   - Nuova voce 303 per il basso con vero filtro a diodi (prima era la voce di S33 - Acid).
   - CUTOFF ha una corsa più ampia: a tutto aperto il filtro è davvero aperto.
 
 RICOSTRUIRE (sorgenti nella cartella src)
-  python3 src/build.py "v2 (1.1.0)" 1.1.0      (dalla cartella "s33_Pulsar")
+  python3 src/build.py "v3 (1.1.1)" 1.1.1      (dalla cartella "s33_Pulsar")

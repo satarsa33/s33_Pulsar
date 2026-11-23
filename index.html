@@ -23,6 +23,8 @@ html,body{margin:0;background:var(--bg);color:var(--ink);overflow:hidden;min-hei
 body{font:500 12px/1.25 -apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;-webkit-user-select:none;user-select:none}
 #fit{display:flex;justify-content:center;align-items:flex-start;padding:14px 0}
 #stage{width:1360px;flex:none;transform-origin:top center}
+.bars{display:flex;flex-direction:column;gap:10px}
+.mid{flex-wrap:wrap}
 .box{background:var(--panel);border:1px solid #2a2d33;border-radius:18px;padding:20px 24px;display:flex;flex-direction:column;gap:14px;box-shadow:0 30px 60px rgba(0,0,0,.5)}
 button{font:700 11px/1 -apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;letter-spacing:.08em;color:var(--ink);background:#1d2026;border:1px solid var(--line2);border-radius:6px;height:30px;padding:0 12px;cursor:pointer;white-space:nowrap}
 button:hover{border-color:#4a4f5a}
@@ -76,7 +78,8 @@ select{height:30px;border-radius:6px;border:1px solid var(--line2);background:#1
 .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
 .hot{border-color:var(--gold)!important;color:var(--gold)!important;background:rgba(227,179,65,.2)!important}
 /* sound + fx */
-.snd{flex:1 1 520px;display:flex;flex-direction:column;gap:12px}
+.snd{flex:1 1 500px;display:flex;flex-direction:column;gap:12px}
+.perf{flex:.8 1 380px}
 .fx{flex:1.25 1 640px;display:flex;flex-direction:column;gap:10px}
 .fxg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
 .fxb{background:var(--box2);border:1px solid #262930;border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:8px}
@@ -86,11 +89,11 @@ select{height:30px;border-radius:6px;border:1px solid var(--line2);background:#1
 .tdot{width:12px;height:12px;border-radius:50%;display:inline-block}
 .tname{font-size:18px;font-weight:700}
 /* perform */
-.pads{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-.pad{height:70px;width:100%;border-radius:12px;border-width:2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;touch-action:none}
+.pads{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px}
+.pad{height:58px;width:100%;border-radius:12px;border-width:2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;touch-action:none}
 .pad b{font-size:17px;letter-spacing:.15em}.pad small{font-size:10px;letter-spacing:.05em;opacity:.8;font-weight:500}
 .pad.on{color:#fff;border-color:var(--c);background:var(--cb);box-shadow:0 0 18px var(--cb)}
-.popt{display:flex;gap:4px;justify-content:center;margin-top:6px}
+.popt{display:flex;gap:4px;justify-content:center;margin-top:5px;min-height:24px}
 .popt .seg{height:24px;font-size:10px;padding:0 8px}
 /* sequencer */
 .sq{display:flex;flex-direction:column;gap:6px}
@@ -127,28 +130,22 @@ body.board .solo{display:none!important}
 <div id="fit"><div id="stage"><div class="box">
 
   <div class="hdr">
-    <div class="logo"><span class="s">S33</span><span class="a">PUL</span><span class="b">SAR</span><span class="v">v1.1.0</span></div>
+    <div class="logo"><span class="s">S33</span><span class="a">PUL</span><span class="b">SAR</span><span class="v">v1.1.1</span></div>
     <button id="pow" title="Start the audio">⏻</button>
     <div class="disp" id="disp"></div>
     <span class="sp"></span>
     <div class="flex" id="transport"></div>
   </div>
 
-  <div class="sec flex" id="patBar"></div>
-  <div class="sec flex" id="bankBar"></div>
+  <div class="sec bars"><div class="flex" id="patBar"></div><div class="flex" id="bankBar"></div></div>
 
-  <div class="row">
+  <div class="row mid">
     <div class="sec snd" id="sound"></div>
     <div class="sec fx" id="fx"></div>
+    <div class="sec perf" id="perform"></div>
   </div>
 
-  <div class="sec" id="perform"></div>
   <div class="sec sq" id="seq"></div>
-
-  <div class="foot">
-    <div class="sec"><b style="color:var(--blue)">MOTHER BOARD</b><span>Also a module of the S33 - Mother Board: OUT (everything, with effects), DRUM and BASS (separate, before delay and reverb). It follows the board's Clock and Play, and its bank is saved in the session.</span></div>
-    <div class="sec"><b style="color:var(--gold)">MIDI</b><span>Drums on any channel (GM): 36 BD · 38 SD · 39 CP · 45 TOM · 42 CH · 46 OH. Bass on channel 2 (velocity &gt; 100 = accent, legato = slide). Perform pads, held: 48 ROLL · 49 BREAK · 50 TAPE STOP · 51 REPEAT.</span></div>
-  </div>
 
 </div></div></div>
 
@@ -1005,7 +1002,7 @@ function renderPatBar(){
     <span class="sp"></span>
     <span class="cap solo">SYNC</span><span class="solo">${seg('INT', M.sync === 'INT', 'sync', 'INT', '#4C8DFF')}${seg('MIDI', M.sync === 'EXT', 'sync', 'EXT', '#4C8DFF')}</span>
     <span class="cap solo" style="margin-left:6px">CLOCK OUT</span><select class="solo" id="clkout" title="Send MIDI clock to"><option value="">off</option>${outs}</select>
-    <button class="solo" data-act="midi" style="border-color:#2f5fb0;background:#14223a;color:#a9c8ff">MIDI</button>
+    <button class="solo" data-act="midi" title="Connect MIDI. Drums on any channel (GM): 36 BD · 38 SD · 39 CP · 45 TOM · 42 CH · 46 OH. Bass on channel 2 (velocity &gt; 100 = accent, legato = slide). Perform pads, held: 48 ROLL · 49 BREAK · 50 TAPE STOP · 51 REPEAT." style="border-color:#2f5fb0;background:#14223a;color:#a9c8ff">MIDI</button>
     <span class="hint" style="max-width:250px">${esc(M.midi)}</span>`;
 }
 function renderBank(){
@@ -1205,7 +1202,11 @@ const stage = $('#stage'), fit = $('#fit');
 function fitStage(){
   const pad = BOARD ? 6 : 14, W = innerWidth - 2 * pad, H = innerHeight - 2 * pad;
   fit.style.padding = pad + 'px 0'; stage.style.transform = '';
-  const s = Math.max(0.3, Math.min(1.5, W / 1360, H / stage.offsetHeight));
+  // the layout reflows: pick the stage width that matches the window's proportions (1360…2200), then scale to fit
+  let w = 1360;
+  for(let i = 0; i < 3; i++){ stage.style.width = w + 'px'; const want = Math.round(stage.offsetHeight * W / H); const nw = Math.max(1360, Math.min(2200, want)); if(Math.abs(nw - w) < 8) break; w = nw; }
+  stage.style.width = w + 'px';
+  const s = Math.max(0.3, Math.min(1.5, W / w, H / stage.offsetHeight));
   stage.style.transform = `scale(${s})`; fit.style.height = (stage.offsetHeight * s + 2 * pad) + 'px';
 }
 addEventListener('resize', fitStage);
