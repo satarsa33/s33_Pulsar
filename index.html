@@ -130,7 +130,7 @@ body.board .solo{display:none!important}
 <div id="fit"><div id="stage"><div class="box">
 
   <div class="hdr">
-    <div class="logo"><span class="s">S33</span><span class="a">PUL</span><span class="b">SAR</span><span class="v">v1.1.1</span></div>
+    <div class="logo"><span class="s">S33</span><span class="a">PUL</span><span class="b">SAR</span><span class="v">v1.2.0</span></div>
     <button id="pow" title="Start the audio">⏻</button>
     <div class="disp" id="disp"></div>
     <span class="sp"></span>
@@ -486,7 +486,8 @@ const M = {
   midi:BOARD ? 'MIDI: from the board' : 'MIDI: not connected',
   edit:'STEP', unsaved:false, bankMsg:'Factory bank',
   perf:{ roll:false, brk:false, tape:false, rep:false, rollRate:'1/16', repLen:'1/8', tapeLen:'SHORT', latch:false },
-  sync:'INT', clkOut:'', extBpm:0
+  sync:'INT', clkOut:'', extBpm:0,
+  notesOut:'', local:{ dr:true, bs:true }        // MIDI notes out (port, alone) · LOCAL: the internal sound on/off
 };
 const pat = ()=>M.pats[M.pat];
 
@@ -505,7 +506,7 @@ function switchPattern(i){
 }
 function bankData(){
   storeLive();
-  return { app:'S33 - Pulsar', v:1, savedAt:new Date().toISOString(), cur:M.pat, sync:M.sync, clkOut:M.clkOut, pats:M.pats };
+  return { app:'S33 - Pulsar', v:1, savedAt:new Date().toISOString(), cur:M.pat, sync:M.sync, clkOut:M.clkOut, notesOut:M.notesOut, local:M.local, pats:M.pats };
 }
 function loadBank(d){
   if(!d || !Array.isArray(d.pats)) throw new Error('bad bank');
@@ -515,7 +516,8 @@ function loadBank(d){
   const g = normSnd({ bpm:d.bpm, swing:d.swing, p:d.p, fx:d.fx });
   if(g && (d.p || d.fx)) M.pats.forEach(p=>{ if(!p.snd) p.snd = clone(g); });
   M.pat = (d.cur >= 0 && d.cur < 32) ? d.cur : 0;
-  if(!BOARD){ if(d.sync === 'EXT' || d.sync === 'INT') M.sync = d.sync; if(typeof d.clkOut === 'string') M.clkOut = d.clkOut; }
+  if(!BOARD){ if(d.sync === 'EXT' || d.sync === 'INT') M.sync = d.sync; if(typeof d.clkOut === 'string') M.clkOut = d.clkOut; if(typeof d.notesOut === 'string') M.notesOut = d.notesOut; }
+  if(d.local && typeof d.local === 'object') M.local = { dr:d.local.dr !== false, bs:d.local.bs !== false };
   M.cue = null; M.page = 0;
   loadSnd(pat());
   if(ctx){ buildIR(); applyParams(); }
@@ -742,7 +744,7 @@ function bassStep(s, t, sd){
   if(Math.random() > pt.prob[6][s]) return;
   const prev = pt.bass[mod(s - 1, len)], next = pt.bass[(s + 1) % len];
   const legato = prev.on && prev.s, hold = st.s && next.on;
-  bassNote(t, 36 + st.n + bassTr(), st.a, legato, hold ? null : t + sd * 0.55);
+  playBass(t, 36 + st.n + bassTr(), st.a, legato, hold ? null : t + sd * 0.55);
 }
 function audition(i){
   if(M.playing) return;                    // while the groove runs, clicks never add hits
@@ -773,7 +775,7 @@ async function start(){
 function stop(){
   if(!M.playing && M.step < 0) return;
   M.playing = false; M.step = -1; q = [];
-  bsend({ type:'panic' });
+  bsend({ type:'panic' }); notesOutPanic();
   clkOutStop();
   if(M.cue != null){ switchPattern(M.cue); M.cue = null; }
   renderAll();
@@ -800,8 +802,8 @@ function sched(s, t, sd){
     const v = pt.drums[i][s];
     if(!v || M.mute[i]) continue;
     if(Math.random() > pt.prob[i][s]) continue;
-    hit(i, t, v === 2 ? 1 : 0.7);
-    if(v === 3) hit(i, t + sd / 2, 0.6);
+    playDrum(i, t, v === 2 ? 1 : 0.7);
+    if(v === 3) playDrum(i, t + sd / 2, 0.6);
   }
   bassStep(s, t, sd);
 }
@@ -835,7 +837,7 @@ async function perfSet(key, on){
   if(key === 'roll'){
     if(on){
       rollStart = rollNext = M.playing ? Math.max(gridT, now + 0.005) : now + 0.005;
-      if(M.sel !== 6) bsend({ type:'panic' });               // the bass line stops under the roll
+      if(M.sel !== 6){ bsend({ type:'panic' }); bassOutOff(rollStart); }   // the bass line stops under the roll
       rollTick(); rollTimer = setInterval(rollTick, 20);
     } else {
       clearInterval(rollTimer);
@@ -864,8 +866,8 @@ function rollTick(){
   const spb = 60 / curBpm(), iv = { '1/16':spb / 4, '1/16T':spb / 6, '1/32':spb / 8 }[M.perf.rollRate];
   while(rollNext < ctx.currentTime + 0.05){
     const age = rollNext - rollStart, vel = Math.min(1, 0.4 + age / (spb * 2) * 0.6);
-    if(M.sel < 6) hit(M.sel, rollNext, vel);
-    else { const st = M.step >= 0 ? pat().bass[M.step] : null; bassNote(rollNext, 36 + (st && st.on ? st.n : 0) + bassTr(), vel > 0.9, false, rollNext + iv * 0.5); }
+    if(M.sel < 6) playDrum(M.sel, rollNext, vel);
+    else { const st = M.step >= 0 ? pat().bass[M.step] : null; playBass(rollNext, 36 + (st && st.on ? st.n : 0) + bassTr(), vel > 0.9, false, rollNext + iv * 0.5); }
     rollNext += iv;
   }
 }
@@ -926,6 +928,36 @@ function extClock(st, ts){
   } else if(st === 0xFB){ EXT.running = true; M.playing = true; renderAll(); }
   else if(st === 0xFC){ EXT.running = false; stop(); }
 }
+/* ----- MIDI notes out: drums on channel 10 (GM notes), bass on channel 2 -----
+   Alone: to the port chosen in NOTES OUT. In the board: the MIDI DRUM and MIDI BASS jacks.
+   What goes out is what plays (probability, ratchets, rolls); notes arriving at MIDI IN are not echoed. */
+const GM_OUT = [36, 38, 39, 45, 42, 46];
+let bassOut = -1;
+function notesPort(){ if(BOARD || !midiAcc || !M.notesOut) return null; let p = null; midiAcc.outputs.forEach(o=>{ if(o.id === M.notesOut) p = o; }); return p; }
+function mOut(kind, data, t){
+  if(BOARD){ if(S33.midiEmitPort) try{ S33.midiEmitPort(kind === 'dr' ? 'mdr' : 'mbs', data, t); }catch(e){} return; }
+  const p = notesPort(); if(p && ctx) try{ p.send(data, tsOf(t)); }catch(e){}
+}
+function playDrum(i, t, vel){
+  if(M.local.dr) hit(i, t, vel);
+  const v = Math.max(1, Math.min(127, Math.round(vel * 120)));
+  mOut('dr', [0x99, GM_OUT[i], v], t); mOut('dr', [0x89, GM_OUT[i], 0], t + 0.05);
+}
+function playBass(t, n, acc, legato, releaseAt){
+  if(M.local.bs) bassNote(t, n, acc, legato, releaseAt);
+  n = Math.max(0, Math.min(127, n));
+  const prev = bassOut;
+  if(!(legato && prev === n)){                                   // a slide to the same note is a tie: nothing new
+    if(!legato && prev >= 0) mOut('bs', [0x81, prev, 0], t);
+    mOut('bs', [0x91, n, acc ? 120 : 90], t + (legato ? 0 : 0.001));
+    if(legato && prev >= 0 && prev !== n) mOut('bs', [0x81, prev, 0], t + 0.005);   // overlap = legato for a synth
+    bassOut = n;
+  }
+  if(releaseAt != null) bassOutOff(releaseAt);
+}
+function bassOutOff(t){ if(bassOut >= 0){ mOut('bs', [0x81, bassOut, 0], t); bassOut = -1; } }
+function notesOutPanic(){ if(!ctx) return; const t = ctx.currentTime; bassOutOff(t); mOut('bs', [0xB1, 123, 0], t); mOut('dr', [0xB9, 123, 0], t); }
+
 /* ----- MIDI clock out (alone) ----- */
 function clkPort(){ if(BOARD || !midiAcc || !M.clkOut) return null; let p = null; midiAcc.outputs.forEach(o=>{ if(o.id === M.clkOut) p = o; }); return p; }
 const tsOf = t=>performance.now() + Math.max(0, (t - ctx.currentTime) * 1000);
@@ -995,13 +1027,18 @@ function renderPatBar(){
   const pt = pat();
   const pb = M.pats.map((p, i)=>`<button class="pb${i === M.pat ? ' cur' : ''}${i === M.cue ? ' cue' : ''}" data-act="pat" data-v="${i}" aria-label="Pattern ${i + 1} ${esc(p.name)}"><b>${pad2(i + 1)}</b><i>${esc(p.name)}</i></button>`).join('');
   let outs = '';
-  if(midiAcc && !BOARD){ midiAcc.outputs.forEach(o=>{ outs += `<option value="${esc(o.id)}"${o.id === M.clkOut ? ' selected' : ''}>${esc(o.name)}</option>`; }); }
+  let nouts = '';
+  if(midiAcc && !BOARD) midiAcc.outputs.forEach(o=>{
+    outs += `<option value="${esc(o.id)}"${o.id === M.clkOut ? ' selected' : ''}>${esc(o.name)}</option>`;
+    nouts += `<option value="${esc(o.id)}"${o.id === M.notesOut ? ' selected' : ''}>${esc(o.name)}</option>`; });
   $('#patBar').innerHTML = `<span class="cap">PATTERN</span><div class="pats">${pb}</div>
     <span class="cap" style="margin-left:10px">LENGTH</span>${[8, 16, 32].map(n=>seg(String(n), pt.len === n, 'len', n, '#E3B341')).join('')}
     ${pt.len === 32 ? `<span class="cap" style="margin-left:6px">PAGE</span>${['1–16', '17–32'].map((l, i)=>seg(l, M.page === i, 'page', i, '#4C8DFF')).join('')}` : ''}
     <span class="sp"></span>
     <span class="cap solo">SYNC</span><span class="solo">${seg('INT', M.sync === 'INT', 'sync', 'INT', '#4C8DFF')}${seg('MIDI', M.sync === 'EXT', 'sync', 'EXT', '#4C8DFF')}</span>
     <span class="cap solo" style="margin-left:6px">CLOCK OUT</span><select class="solo" id="clkout" title="Send MIDI clock to"><option value="">off</option>${outs}</select>
+    <span class="cap solo" style="margin-left:6px">NOTES OUT</span><select class="solo" id="notesout" title="Send the pattern as MIDI notes: drums on channel 10, bass on channel 2"><option value="">off</option>${nouts}</select>
+    <span class="cap" style="margin-left:6px" title="The internal sound. Turn it off to play only another synth through MIDI">LOCAL</span>${seg('DRUM', M.local.dr, 'local', 'dr', '#E3B341')}${seg('BASS', M.local.bs, 'local', 'bs', '#7BD88F')}
     <button class="solo" data-act="midi" title="Connect MIDI. Drums on any channel (GM): 36 BD · 38 SD · 39 CP · 45 TOM · 42 CH · 46 OH. Bass on channel 2 (velocity &gt; 100 = accent, legato = slide). Perform pads, held: 48 ROLL · 49 BREAK · 50 TAPE STOP · 51 REPEAT." style="border-color:#2f5fb0;background:#14223a;color:#a9c8ff">MIDI</button>
     <span class="hint" style="max-width:250px">${esc(M.midi)}</span>`;
 }
@@ -1114,6 +1151,7 @@ document.addEventListener('click', e=>{
     case 'page': M.page = +v; renderPatBar(); renderSeq(); return;
     case 'sync': M.sync = v; if(v === 'EXT'){ stop(); power(); } EXT.running = false; changed(); renderAll(); return;
     case 'midi': power().then(initMIDI); return;
+    case 'local': M.local[v] = !M.local[v]; if(v === 'bs' && !M.local.bs) bsend({ type:'panic' }); changed(); renderPatBar(); return;
     case 'edit': M.edit = v; renderSeq(); return;
     case 'model': pt.kit[M.sel] = v; audition(M.sel); changed(); renderSound(); renderSeq(); return;
     case 'wave': M.p[6].wave = v; applyParams(); audition(6); changed(); renderSound(); return;
@@ -1121,7 +1159,7 @@ document.addEventListener('click', e=>{
     case 'padopt': { const [k, val] = v.split(':'); M.perf[k] = val; renderPerform(); return; }
     case 'latch': M.perf.latch = !M.perf.latch; if(!M.perf.latch) ['roll', 'brk', 'tape', 'rep'].forEach(k=>{ if(M.perf[k]) perfSet(k, false); }); renderPerform(); return;
     case 'sel': M.sel = +v; audition(M.sel); renderDisp(); renderSound(); renderPerform(); renderSeq(); return;
-    case 'mute': M.mute[+v] = !M.mute[+v]; if(+v === 6 && M.mute[6]) bsend({ type:'panic' }); renderSeq(); return;
+    case 'mute': M.mute[+v] = !M.mute[+v]; if(+v === 6 && M.mute[6]){ bsend({ type:'panic' }); if(ctx) bassOutOff(ctx.currentTime); } renderSeq(); return;
     case 'cell': {
       const i = +b.dataset.t, s = +b.dataset.s, bs = pt.bass[s];
       const val = i === 6 ? (bs.on ? (bs.a ? 2 : 1) : 0) : pt.drums[i][s];
@@ -1176,6 +1214,7 @@ document.addEventListener('input', e=>{
 });
 document.addEventListener('change', e=>{
   if(e.target.id === 'clkout'){ M.clkOut = e.target.value; changed(); return; }
+  if(e.target.id === 'notesout'){ if(ctx) notesOutPanic(); M.notesOut = e.target.value; changed(); return; }
   if(e.target.id === 'imp'){
     const f = e.target.files && e.target.files[0]; if(!f) return;
     f.text().then(txt=>{

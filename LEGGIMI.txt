@@ -1,4 +1,4 @@
-S33 - PULSAR · v3 (1.1.1)
+S33 - PULSAR · v4 (1.2.0)
 ========================
 
 Groovebox batteria + basso ispirata alla Roland AIRA Compact T-8: sei tracce di batteria con i suoni
@@ -52,6 +52,13 @@ MIDI
   - SYNC: INT (tempo suo) oppure MIDI (segue il MIDI clock in arrivo, per esempio da Logic: parte e si
     ferma con Logic, il tempo lo decide Logic).
   - CLOCK OUT: manda il MIDI clock (con start e stop) alla porta scelta.
+  - NOTES OUT: manda il pattern come note MIDI alla porta scelta: batteria sul canale 10 con le note GM
+    (le stesse dell'ingresso), basso sul canale 2. Gli accenti hanno velocity 120, gli slide arrivano
+    come note legate (la nuova parte prima che finisca la vecchia). Esce quello che suona davvero:
+    probabilità, ratchet e ROLL compresi; mute = niente note. Le note che arrivano al MIDI IN non
+    vengono ripetute in uscita (niente anelli). Così puoi registrare il pattern in Logic o usare il
+    basso di Pulsar per suonare un altro synth (l'FM-1, per esempio).
+  - LOCAL DRUM / BASS: accende o spegne il suono interno. Con LOCAL BASS spento il basso esce solo in MIDI.
   - Barra spaziatrice: Play / Stop.
 
 NELLA MOTHER BOARD (dalla 0.22)
@@ -59,6 +66,8 @@ NELLA MOTHER BOARD (dalla 0.22)
   Tre uscite: OUT (tutto, con gli effetti), DRUM e BASS (separate, prima di delay e riverbero: per
   mandarle nel Looper su cassette diverse o nella Stompbox). Usa OUT oppure DRUM/BASS, non insieme,
   altrimenti il suono raddoppia.
+  Due uscite MIDI: DRUM (canale 10) e BASS (canale 2), con le note del pattern, da collegare a un
+  altro strumento della board (per esempio BASS → Twin Core o Hexa, con LOCAL BASS spento) o al MIDI Out.
   Con il Clock collegato segue Play e tempo della board (il tempo dei pattern non conta).
   Il banco si salva da solo e finisce nel file della sessione.
 
@@ -66,6 +75,10 @@ INSTALLARE
   Come le altre app S33: su GitHub Pages, oppure da Terminale nella cartella
     python3 -m http.server 8035   e poi http://localhost:8035 in Chrome → Installa.
   Per una versione nuova cambia VERSIONE in sw.js.
+
+NOVITÀ DELLA 1.2.0
+  - MIDI OUT delle note: NOTES OUT (da sola) e prese MIDI DRUM e BASS nella Mother Board.
+  - LOCAL DRUM / BASS per spegnere il suono interno.
 
 NOVITÀ DELLA 1.1.1
   - L'interfaccia si adatta alla finestra: su uno schermo largo si allarga invece di lasciare spazio
@@ -77,4 +90,4 @@ NOVITÀ DELLA 1.1.0
   - CUTOFF ha una corsa più ampia: a tutto aperto il filtro è davvero aperto.
 
 RICOSTRUIRE (sorgenti nella cartella src)
-  python3 src/build.py "v3 (1.1.1)" 1.1.1      (dalla cartella "s33_Pulsar")
+  python3 src/build.py "v4 (1.2.0)" 1.2.0      (dalla cartella "s33_Pulsar")
